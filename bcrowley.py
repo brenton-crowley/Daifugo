@@ -75,12 +75,16 @@ def generate_plays(hand):
     # TODO find straights (3 or more)
     # TODO find 2 of a kind
     # TODO rest are singles
+    plays = [[card] for card in hand]
 
-    pass
+    plays += find_all_n_of_a_kind(hand)
+
+    return plays
 
 
 def is_valid_play(play,rnd):
-    """Should return a Boolean value, evaluating whether the given play is
+    """
+    Should return a Boolean value, evaluating whether the given play is
     valid or not in the context of the current round. You may assume that play
     constitutes a legal combination of cards, including the possibility
     of a pass (play = None).
@@ -127,7 +131,8 @@ def play(rnd, hand, discard, holding,
 
 
 def deal(players=4):
-    """Will return a tuple of lists whose length will be that
+    """
+    Will return a tuple of lists whose length will be that
     of the `players` input, which defaults to 4. Each nested list will comprise
     cards whose length is determined by the quotient of the number of players
     over the deck length (52).
@@ -148,7 +153,7 @@ def deal(players=4):
 
     for hand in hands:
         sort_hand(hand)
-        find_all_n_of_a_kind(hand)
+        generate_plays(hand)
 
 
     return hands
@@ -186,7 +191,7 @@ def sort_hand(hand):
         None
     """
 
-    groups = get_value_groups(hand)
+    groups = get_rank_groups(hand)
 
     sorted_hand = []
 
@@ -199,7 +204,7 @@ def sort_hand(hand):
         hand[index] = card
 
 
-def get_value_groups(hand):
+def get_rank_groups(hand):
     """
     Returns a dict containing the values in ORDERED_VALUES as keys. Each value
     in the dict will return a list of cards.
@@ -218,7 +223,7 @@ def get_value_groups(hand):
 
     # will get the key (first char of card) and append it to the containing list
     for rank, group in groupby(hand, lambda card: card[0]):
-        groups[group] += list(group)
+        groups[rank] += list(group)
 
     return groups
 
@@ -238,7 +243,7 @@ def find_all_n_of_a_kind(hand):
     RETURNS:
         groups  - dict of lists
     """
-    groups = get_value_groups(hand)
+    groups = get_rank_groups(hand)
 
     all_combinations = []
 
@@ -246,17 +251,19 @@ def find_all_n_of_a_kind(hand):
 
         cards = groups[group_key]
 
+        print cards
+
         if len(cards) >= 2:  # two or more get all 2-of-a-kind
-            all_combinations += list(combinations(cards, 2))
+            all_combinations += combinations(cards, 2)
 
         if len(cards) >= 3:  # three or more get all 3-of-a-kind
-            all_combinations += list(combinations(cards, 3))
+            all_combinations += combinations(cards, 3)
 
         if len(cards) == 4:  # 4-of-a-kind
-            all_combinations += cards
+            all_combinations += [cards]
 
 
-    print all_combinations
+    return all_combinations
 
 
 deal()
