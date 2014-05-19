@@ -8,9 +8,12 @@ Daifugo
 
 *****************************************************************************"""
 
-from itertools import cycle, product
+from itertools import cycle, product, groupby
 from random import shuffle
+from collections import defaultdict
 
+SUITS = 'SHCD'
+ORDERED_VALUES = '34567890JQKA2'
 
 def swap_cards(hand, pid):
     """It returns a list of cards from hand to swap with an opposing player at
@@ -93,7 +96,7 @@ def play(rnd, hand, discard, holding,
 
 
 def deal(players=4):
-    """Will return a multidimensional list of lists whose length will be that
+    """Will return a tuple of lists whose length will be that
     of the `players` input, which defaults to 4. Each nested list will comprise
     cards whose length is determined by the quotient of the number of players
     over the deck length (52).
@@ -102,16 +105,20 @@ def deal(players=4):
         players - the number of players to deal to
 
     RETURNS:
-        list    - multidimensional list of lists.
+        list    - a tuple of lists.
     """
     deck = get_deck(True)
-    hands = tuple(list() for i in xrange(players))
+    hands = list(list() for i in xrange(players))
     players = cycle(hands)
 
     for card in deck:
         player = players.next()
         player.append(card)
-        print hands
+
+    for hand in hands:
+        sort_hand(hand)
+
+    print hands
 
     return hands
 
@@ -127,9 +134,8 @@ def get_deck(shouldShuffle=False):
     RETURNS
         list            - list of strings exactly 52 in length.
     """
-    suits = 'SHCD'
-    values = '34567890JQKA2'
-    deck = product(values, suits)
+
+    deck = product(ORDERED_VALUES, SUITS)
     deck = [''.join(card) for card in deck]
 
     if shouldShuffle:
@@ -137,4 +143,52 @@ def get_deck(shouldShuffle=False):
 
     return deck
 
+
+def sort_hand(hand):
+    """Will mutate the `hand` by reordering according to the Diafugo rule of
+    value ordering, which, in ascending order, is: 34567890JQKA2
+
+    INPUTS:
+        hand   - list of cards (e.g. "3D") to be sorted
+
+    RETURNS
+        None
+    """
+
+    groups = get_value_groups(hand)
+
+    sorted_hand = []
+
+    for key in ORDERED_VALUES:
+        sorted_hand += groups[key]
+
+    # reorders the supplied hand according to the sorted_hand
+    for card in sorted_hand:
+        index = sorted_hand.index(card)
+        hand[index] = card
+
+    return hand
+
+def get_value_groups(hand):
+    """
+    Returns a dict containing the values in ORDERED_VALUES as keys. Each value
+    in the dict will return a list of cards.
+
+    e.g. {'J': ['JH, JS], '0': [0D] ...}
+
+    INPUTS:
+        hand    - list of cards (e.g. "3D")
+
+    RETURNS:
+        groups  - dict of lists
+    """
+
+    # create a dict to group values
+    groups = defaultdict(list)
+
+    # will get the key (first char of card) and append it to the containing list
+    for rank, group in groupby(hand, lambda card: card[0]):
+        groups[rank] += list(group)
+
+    return groups
 deal()
