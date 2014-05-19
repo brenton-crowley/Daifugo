@@ -8,6 +8,10 @@ Daifugo
 
 *****************************************************************************"""
 
+from itertools import cycle, product
+from random import shuffle
+
+
 def swap_cards(hand, pid):
     """It returns a list of cards from hand to swap with an opposing player at
     the start of the game, based on the rules for card swapping.
@@ -26,6 +30,7 @@ def swap_cards(hand, pid):
     """
     pass
 
+
 def generate_plays(hand):
     """Takes the single argument 'hand', which is a list of cards you currently
     hold, and returns a list of all possible (non-pass) plays (each of which is
@@ -38,6 +43,7 @@ def generate_plays(hand):
         list    - comprising of cards.
     """
     pass
+
 
 def is_valid_play(play,rnd):
     """Should return a Boolean value, evaluating whether the given play is
@@ -55,6 +61,7 @@ def is_valid_play(play,rnd):
                   context of the current round
     """
     pass
+
 
 def play(rnd, hand, discard, holding,
          generate=generate_plays, valid=is_valid_play):
@@ -83,3 +90,51 @@ def play(rnd, hand, discard, holding,
         list    - list of cards representing the next play.
     """
     pass
+
+
+def deal(players=4):
+    """Will return a multidimensional list of lists whose length will be that
+    of the `players` input, which defaults to 4. Each nested list will comprise
+    cards whose length is determined by the quotient of the number of players
+    over the deck length (52).
+
+    INPUTS:
+        players - the number of players to deal to
+
+    RETURNS:
+        list    - multidimensional list of lists.
+    """
+    deck = get_deck(True)
+    hands = tuple(list() for i in xrange(players))
+    players = cycle(hands)
+
+    for card in deck:
+        player = players.next()
+        player.append(card)
+        print hands
+
+    return hands
+
+
+def get_deck(shouldShuffle=False):
+    """Will return a list of strings in the form of '"value" + "suit"' e.g. "3D"
+    which signifies 3 of diamonds. The value 0 is equivalent to 10.
+
+    INPUTS:
+        shouldShuffle   - boolean that determines whether or not the deck order
+                          is randomised.
+
+    RETURNS
+        list            - list of strings exactly 52 in length.
+    """
+    suits = 'SHCD'
+    values = '34567890JQKA2'
+    deck = product(values, suits)
+    deck = [''.join(card) for card in deck]
+
+    if shouldShuffle:
+        shuffle(deck)
+
+    return deck
+
+deal()
