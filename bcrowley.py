@@ -8,9 +8,11 @@ Daifugo
 
 *****************************************************************************"""
 
-from itertools import cycle, product, groupby
+from itertools import cycle, product, groupby, combinations
 from random import shuffle
 from collections import defaultdict
+
+# CONSTANTS
 
 SUITS = 'SHCD'
 ORDERED_VALUES = '34567890JQKA2'
@@ -31,7 +33,27 @@ def swap_cards(hand, pid):
     RETURNS
         list - comprising of cards.
     """
-    pass
+
+    sort_hand(hand)
+
+    if pid == 0:
+        return hand[-2:]
+    elif pid == 1:
+        return hand[-1:]
+    elif pid == 2:
+        # TODO will require more logic for strategy.
+        # • You do not want to discard a card if it is part of a set,
+        # or if it is part of n kind
+        return hand[:1]
+    elif pid == 3:
+        # TODO will require more logic for strategy.
+        # • You do not want to discard a card if it is part of a set,
+        # or if it is part of n kind
+        return hand[:2]
+    else:
+        return []
+
+
 
 
 def generate_plays(hand):
@@ -45,6 +67,15 @@ def generate_plays(hand):
     RETURNS
         list    - comprising of cards.
     """
+
+    # TODO find straights (5 or more)
+    # TODO find 4 of a kind
+    # TODO find straights (4 or more)
+    # TODO find 3 of a kind
+    # TODO find straights (3 or more)
+    # TODO find 2 of a kind
+    # TODO rest are singles
+
     pass
 
 
@@ -117,8 +148,8 @@ def deal(players=4):
 
     for hand in hands:
         sort_hand(hand)
+        find_all_n_of_a_kind(hand)
 
-    print hands
 
     return hands
 
@@ -149,7 +180,7 @@ def sort_hand(hand):
     value ordering, which, in ascending order, is: 34567890JQKA2
 
     INPUTS:
-        hand   - list of cards (e.g. "3D") to be sorted
+        hand   - list of cards (e.g. ['3D']) to be sorted
 
     RETURNS
         None
@@ -167,7 +198,6 @@ def sort_hand(hand):
         index = sorted_hand.index(card)
         hand[index] = card
 
-    return hand
 
 def get_value_groups(hand):
     """
@@ -177,7 +207,7 @@ def get_value_groups(hand):
     e.g. {'J': ['JH, JS], '0': [0D] ...}
 
     INPUTS:
-        hand    - list of cards (e.g. "3D")
+        hand    - list of cards (e.g. ['3D'])
 
     RETURNS:
         groups  - dict of lists
@@ -188,7 +218,45 @@ def get_value_groups(hand):
 
     # will get the key (first char of card) and append it to the containing list
     for rank, group in groupby(hand, lambda card: card[0]):
-        groups[rank] += list(group)
+        groups[group] += list(group)
 
     return groups
+
+
+def find_all_n_of_a_kind(hand):
+    """
+    Returns a list containing the all the possible combinations of n-of-a-kind.
+    Two-of-a-kind: ['3H', '3D']
+    Three-of-a-kind: ['5D', '5H', '5S']
+    Four-of-a-kind: ['JD', 'JH', 'JS', 'JC']
+
+    e.g. {'J': ['JH, JS], '0': [0D] ...}
+
+    INPUTS:
+        hand    - list of cards (e.g. ['3D'])
+
+    RETURNS:
+        groups  - dict of lists
+    """
+    groups = get_value_groups(hand)
+
+    all_combinations = []
+
+    for group_key in groups.keys():
+
+        cards = groups[group_key]
+
+        if len(cards) >= 2:  # two or more get all 2-of-a-kind
+            all_combinations += list(combinations(cards, 2))
+
+        if len(cards) >= 3:  # three or more get all 3-of-a-kind
+            all_combinations += list(combinations(cards, 3))
+
+        if len(cards) == 4:  # 4-of-a-kind
+            all_combinations += cards
+
+
+    print all_combinations
+
+
 deal()
