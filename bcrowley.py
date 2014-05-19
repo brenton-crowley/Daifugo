@@ -153,8 +153,6 @@ def deal(players=4):
 
     for hand in hands:
         sort_hand(hand)
-        generate_plays(hand)
-
 
     return hands
 
@@ -195,8 +193,8 @@ def sort_hand(hand):
 
     sorted_hand = []
 
-    for key in ORDERED_VALUES:
-        sorted_hand += groups[key]
+    for rank in ORDERED_VALUES:
+        sorted_hand += groups[rank]
 
     # reorders the supplied hand according to the sorted_hand
     for card in sorted_hand:
@@ -209,7 +207,7 @@ def get_rank_groups(hand):
     Returns a dict containing the values in ORDERED_VALUES as keys. Each value
     in the dict will return a list of cards.
 
-    e.g. {'J': ['JH, JS], '0': [0D] ...}
+    e.g. {'J': ['H, S], '0': [0D] ...}
 
     INPUTS:
         hand    - list of cards (e.g. ['3D'])
@@ -250,8 +248,6 @@ def find_all_n_of_a_kind(hand):
     for group_key in groups.keys():
 
         cards = groups[group_key]
-
-        print cards
 
         if len(cards) >= 2:  # two or more get all 2-of-a-kind
             all_combinations += combinations(cards, 2)
