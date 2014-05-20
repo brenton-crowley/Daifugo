@@ -8,14 +8,10 @@ Daifugo
 
 *****************************************************************************"""
 
-from itertools import cycle, product, groupby, combinations, chain, ifilter
+from itertools import cycle, product, groupby, combinations, chain, permutations
 from random import shuffle
 from collections import defaultdict
 
-# CONSTANTS
-
-SUITS = 'SHCD'
-ORDERED_VALUES = '34567890JQKA2'
 
 def swap_cards(hand, pid):
     """It returns a list of cards from hand to swap with an opposing player at
@@ -34,7 +30,7 @@ def swap_cards(hand, pid):
         list - comprising of cards.
     """
 
-    sort_hand(hand)
+    hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
 
     if pid == 0:
         return hand[-2:]
@@ -52,8 +48,6 @@ def swap_cards(hand, pid):
         return hand[:2]
     else:
         return []
-
-
 
 
 def generate_plays(hand):
@@ -75,14 +69,15 @@ def generate_plays(hand):
     # TODO find straights (3 or more)
     # TODO find 2 of a kind
     # TODO rest are singles
-    plays = [[card] for card in hand]
 
-    plays += find_all_n_of_a_kind(hand)
+    plays = [[card] for card in hand]
+    plays += get_all_n_of_a_kind(hand)
+    plays += get_all_straights(hand)
 
     return plays
 
 
-def is_valid_play(play,rnd):
+def is_valid_play(play, rnd):
     """
     Should return a Boolean value, evaluating whether the given play is
     valid or not in the context of the current round. You may assume that play
@@ -152,7 +147,8 @@ def deal(players=4):
         player.append(card)
 
     for hand in hands:
-        sort_hand(hand)
+        hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+        generate_plays(hand)
 
     return hands
 
@@ -176,31 +172,6 @@ def get_deck(shouldShuffle=False):
         shuffle(deck)
 
     return deck
-
-
-def sort_hand(hand):
-    """Will mutate the `hand` by reordering according to the Diafugo rule of
-    value ordering, which, in ascending order, is: 34567890JQKA2
-
-    INPUTS:
-        hand   - list of cards (e.g. ['3D']) to be sorted
-
-    RETURNS
-        None
-    """
-
-    rank_dict = get_rank_dict(hand)
-
-    sorted_hand = []
-
-    for rank in ORDERED_VALUES:
-        cards = product(rank, rank_dict[rank])
-        sorted_hand += ["".join(card) for card in cards]
-
-    # reorders the supplied hand according to the sorted_hand
-    for card in sorted_hand:
-        index = sorted_hand.index(card)
-        hand[index] = card
 
 
 def get_rank_dict(hand):
@@ -227,6 +198,7 @@ def get_rank_dict(hand):
 
     return rank_dict
 
+
 def get_suit_dict(hand):
     """
     Returns a dict containing the values in SUITS as keys. Each value
@@ -252,7 +224,7 @@ def get_suit_dict(hand):
     return suit_dict
 
 
-def find_all_n_of_a_kind(hand):
+def get_all_n_of_a_kind(hand):
     """
     Returns a list containing the all the possible combinations of n-of-a-kind.
     Two-of-a-kind: ['3H', '3D']
@@ -265,13 +237,14 @@ def find_all_n_of_a_kind(hand):
     RETURNS:
         groups  - list of lists
     """
-    groups = get_rank_dict(hand)
+    rank_dict = get_rank_dict(hand)
 
     all_combinations = []
 
-    for group_key in groups.keys():
+    for rank in rank_dict.keys():
 
-        cards = groups[group_key]
+        # need to combine the ranks and suits
+        cards = [rank + suit for suit in rank_dict[rank]]
 
         if len(cards) >= 2:  # two or more get all 2-of-a-kind
             all_combinations += combinations(cards, 2)
@@ -285,7 +258,7 @@ def find_all_n_of_a_kind(hand):
     return all_combinations
 
 
-def find_all_straights(hand):
+def get_all_straights(hand):
     """
     Returns a list containing the all the possible straight combinations
     of which straight length is greater than 2
@@ -299,16 +272,15 @@ def find_all_straights(hand):
         groups  - list of lists
     """
 
-    all_straights = []
-
-    # no possibility of a straight if there are less than 3 cards.
-    if len(hand) < 3:
-        return all_straights
-
-
-    def straight_powerset(ranks):
+    def get_straight_possibilities(ranks):
         """
-        Returns the potential straight powerset combinations in lists.
+        Returns the potential straight powerset combinations in lists where
+        the minimum length of a straight must be 3.
+
+        Combinations is used over Permutations to reduce the overhead of
+        possible_straights. To overcome the possibility that a combination
+        may not be ordered, the resulting straight combination is sorted in the
+        body of `find_all_straights`
 
         INPUTS:
 
@@ -318,35 +290,51 @@ def find_all_straights(hand):
             list    - list of all valid and invalid straight combinations
 
         """
-        straights = list(ranks)
-        min_straight_length = lambda list: len(list) >= 3
+        straight_range = range(3, len(ranks) + 1)
 
         possible_straights = chain.from_iterable(
-            combinations(straights, length) for length in
-            range(len(straights) + 1))
+            combinations(
+                ranks, straight_length) for straight_length in straight_range)
 
-        return ifilter(min_straight_length, possible_straights)
+        return possible_straights
 
-    suit_dict = get_suit_dict(hand)
+    all_straights = []
 
-    print suit_dict
+    # no possibility of a straight if there are less than 3 cards.
+    if len(hand) < 3:
+        return all_straights
+
+    suit_dict = get_suit_dict(hand) #  suit as key, rank as value e.g. {'H':[0]}
 
     for suit in suit_dict:
 
         ranks = suit_dict[suit]
 
-        for sequence in straight_powerset(ranks):
+        # `s` is a straight_possibility
+        # i.e. a tuple of ranks in the straight powerset
+        for s in get_straight_possibilities(ranks):
 
-            straight = "".join(sequence)
+            # sort the sequence as it could be jumbled
+            s = list(s)
+            s.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+
+            straight = "".join(s)
 
             if straight in ORDERED_VALUES:
-
                 all_straights.append(
                     ["".join(card) for card in product(straight, suit)])
 
     return all_straights
 
 
-print find_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
+# CONSTANTS
+
+SUITS = 'SHCD'
+ORDERED_VALUES = '34567890JQKA2'
+SORT_FIRST_ELEMENT_BY_RANK = \
+    lambda ele: ORDERED_VALUES.index(ele[0]) # e.g. ['2H']
 
 deal()
+
+# print find_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
+# print find_all_straights(["2H", "AH", "KH", "QH", "JH", "0H", "9H"])
