@@ -8,7 +8,7 @@ Daifugo
 
 *****************************************************************************"""
 
-from itertools import cycle, product, groupby, combinations
+from itertools import cycle, product, groupby, combinations, chain, ifilter
 from random import shuffle
 from collections import defaultdict
 
@@ -189,12 +189,13 @@ def sort_hand(hand):
         None
     """
 
-    groups = get_rank_groups(hand)
+    rank_dict = get_rank_dict(hand)
 
     sorted_hand = []
 
     for rank in ORDERED_VALUES:
-        sorted_hand += groups[rank]
+        cards = product(rank, rank_dict[rank])
+        sorted_hand += ["".join(card) for card in cards]
 
     # reorders the supplied hand according to the sorted_hand
     for card in sorted_hand:
@@ -202,12 +203,12 @@ def sort_hand(hand):
         hand[index] = card
 
 
-def get_rank_groups(hand):
+def get_rank_dict(hand):
     """
     Returns a dict containing the values in ORDERED_VALUES as keys. Each value
     in the dict will return a list of cards.
 
-    e.g. {'J': ['H, S], '0': [0D] ...}
+    e.g. {'J': ['H', 'S'], '0': ['D'] ...}
 
     INPUTS:
         hand    - list of cards (e.g. ['3D'])
@@ -217,13 +218,38 @@ def get_rank_groups(hand):
     """
 
     # create a dict to group values
-    groups = defaultdict(list)
+    rank_dict = defaultdict(list)
 
     # will get the key (first char of card) and append it to the containing list
     for rank, group in groupby(hand, lambda card: card[0]):
-        groups[rank] += list(group)
+        rank_dict[rank] += [card[1] for card in group]
+        # print (rank, group)
 
-    return groups
+    return rank_dict
+
+def get_suit_dict(hand):
+    """
+    Returns a dict containing the values in SUITS as keys. Each value
+    in the dict will return a list of cards.
+
+    e.g. {'H': ['3', '4'], '0': ['D'] ...}
+
+    INPUTS:
+        hand    - list of cards (e.g. ['3D'])
+
+    RETURNS:
+        groups  - dict of str lists
+    """
+
+    # create a dict to group values
+    suit_dict = defaultdict(list)
+
+    # will get the suit (second char of card) and append it to the
+    # containing list
+    for suit, cards in groupby(hand, lambda card: card[1]):
+        suit_dict[suit] += [card[0] for card in cards]
+
+    return suit_dict
 
 
 def find_all_n_of_a_kind(hand):
@@ -233,15 +259,13 @@ def find_all_n_of_a_kind(hand):
     Three-of-a-kind: ['5D', '5H', '5S']
     Four-of-a-kind: ['JD', 'JH', 'JS', 'JC']
 
-    e.g. {'J': ['JH, JS], '0': [0D] ...}
-
     INPUTS:
         hand    - list of cards (e.g. ['3D'])
 
     RETURNS:
-        groups  - dict of lists
+        groups  - list of lists
     """
-    groups = get_rank_groups(hand)
+    groups = get_rank_dict(hand)
 
     all_combinations = []
 
@@ -258,8 +282,71 @@ def find_all_n_of_a_kind(hand):
         if len(cards) == 4:  # 4-of-a-kind
             all_combinations += [cards]
 
-
     return all_combinations
 
+
+def find_all_straights(hand):
+    """
+    Returns a list containing the all the possible straight combinations
+    of which straight length is greater than 2
+
+    e.g. [['3D', '4D', '5D'], ['7C', '8C', '9C', '0C']]
+
+    INPUTS:
+        hand    - list of cards (e.g. ['3D', '5S', '7C'])
+
+    RETURNS:
+        groups  - list of lists
+    """
+
+    all_straights = []
+
+    # no possibility of a straight if there are less than 3 cards.
+    if len(hand) < 3:
+        return all_straights
+
+
+    def straight_powerset(ranks):
+        """
+        Returns the potential straight powerset combinations in lists.
+
+        INPUTS:
+
+            ranks   - list of ranks e.g. ['3', '4', '5', 'J', 'Q', 'K']
+
+        RETURNS:
+            list    - list of all valid and invalid straight combinations
+
+        """
+        straights = list(ranks)
+        min_straight_length = lambda list: len(list) >= 3
+
+        possible_straights = chain.from_iterable(
+            combinations(straights, length) for length in
+            range(len(straights) + 1))
+
+        return ifilter(min_straight_length, possible_straights)
+
+    suit_dict = get_suit_dict(hand)
+
+    print suit_dict
+
+    for suit in suit_dict:
+
+        ranks = suit_dict[suit]
+
+        for sequence in straight_powerset(ranks):
+
+            straight = "".join(sequence)
+
+            if straight in ORDERED_VALUES:
+
+                all_straights.append(
+                    ["".join(card) for card in product(straight, suit)])
+
+    return all_straights
+
+
+print find_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
 
 deal()
