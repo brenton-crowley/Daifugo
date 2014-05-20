@@ -30,7 +30,7 @@ def swap_cards(hand, pid):
         list - comprising of cards.
     """
 
-    hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+    sort_hand(hand)
 
     if pid == 0:
         return hand[-2:]
@@ -147,7 +147,7 @@ def deal(players=4):
         player.append(card)
 
     for hand in hands:
-        hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+        sort_hand(hand)
         generate_plays(hand)
 
     return hands
@@ -172,6 +172,27 @@ def get_deck(shouldShuffle=False):
         shuffle(deck)
 
     return deck
+
+
+def sort_hand(hand):
+    """Will mutate the `hand` according to the Diafugo rule of
+    value ordering, which, in ascending order, is: 34567890JQKA2
+
+    It uses `SORT_FIRST_ELEMENT_BY_RANK` constant function as its sort key,
+    which looks up the index of the rank in ORDERED_VALUES.
+
+    It is wrapped in a function since it is used more than once, so it is
+    easier to modify this function if a change is required.
+
+    INPUTS:
+        hand   - list of cards (e.g. ['3D', 'JH]', '2C') to be sorted
+
+    RETURNS
+        None
+    """
+
+    hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+
 
 
 def get_rank_dict(hand):
