@@ -80,7 +80,7 @@ def generate_plays(hand):
 def is_valid_play(play, rnd):
     """
     Should return a Boolean value, evaluating whether the given play is
-    valid or not in the context of the current round. You may assume that play
+    valid or not in the context of the current round. Assume that play
     constitutes a legal combination of cards, including the possibility
     of a pass (play = None).
 
@@ -93,12 +93,20 @@ def is_valid_play(play, rnd):
         bool    - evaluating whether the given play is valid or not in the
                   context of the current round
     """
+
+    # TODO invalid if no plays in round and play is None
+    # TODO invalid if round is on suit and sequence is not
+
+    # TODO invalid if play does not conform to previous play (not higher)
+        # - TODO invalid if not same sequence e.g. single, pair
+        # - TODO invalid if straight is not higher than previously played one
+
     pass
 
 
 def play(rnd, hand, discard, holding,
          generate=generate_plays, valid=is_valid_play):
-    """This function is your game-playing agent, and returns your play in the
+    """This function is the game-playing agent, and returns the play in the
     form of a list of cards or None.
 
     'discard' represents the entire history of the game so far. It is a list,
@@ -106,9 +114,9 @@ def play(rnd, hand, discard, holding,
     The first item is the first round, and the last item (discard[-1])
     represents the current round (and is identical to 'rnd').
 
-    Your function should return a list of cards representing your next play.
-    If you have no valid plays, or if you choose to pass, your function
-    should return None.
+    The function should return a list of cards representing the next play.
+    If there are no valid plays, or if a pass is chosen, the function
+    will return None.
 
     INPUTS:
         rnd     - a list of plays from the round to date
@@ -165,7 +173,7 @@ def get_deck(shouldShuffle=False):
         list            - list of strings exactly 52 in length.
     """
 
-    deck = product(ORDERED_VALUES, SUITS)
+    deck = product(ORDERED_RANKS, SUITS)
     deck = [''.join(card) for card in deck]
 
     if shouldShuffle:
@@ -179,7 +187,7 @@ def sort_hand(hand):
     value ordering, which, in ascending order, is: 34567890JQKA2
 
     It uses `SORT_FIRST_ELEMENT_BY_RANK` constant function as its sort key,
-    which looks up the index of the rank in ORDERED_VALUES.
+    which looks up the index of the rank in ORDERED_RANKS.
 
     It is wrapped in a function since it is used more than once, so it is
     easier to modify this function if a change is required.
@@ -197,7 +205,7 @@ def sort_hand(hand):
 
 def get_rank_dict(hand):
     """
-    Returns a dict containing the values in ORDERED_VALUES as keys. Each value
+    Returns a dict containing the ranks in ORDERED_RANKS as keys. Each value
     in the dict will return a list of cards.
 
     e.g. {'J': ['H', 'S'], '0': ['D'] ...}
@@ -341,7 +349,7 @@ def get_all_straights(hand):
 
             straight = "".join(s)
 
-            if straight in ORDERED_VALUES:
+            if straight in ORDERED_RANKS:
                 all_straights.append(
                     ["".join(card) for card in product(straight, suit)])
 
@@ -351,9 +359,9 @@ def get_all_straights(hand):
 # CONSTANTS
 
 SUITS = 'SHCD'
-ORDERED_VALUES = '34567890JQKA2'
+ORDERED_RANKS = '34567890JQKA2'
 SORT_FIRST_ELEMENT_BY_RANK = \
-    lambda ele: ORDERED_VALUES.index(ele[0]) # e.g. ['2H']
+    lambda string: ORDERED_RANKS.index(string[0])  # e.g. ['2H']
 
 deal()
 
