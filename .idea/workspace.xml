@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4568d4f5-c405-4208-bfaa-920881fd9ae4" name="Default" comment="Commenced logic for finding all n-of-a-kind combinations in a hand">
+    <list default="true" id="4568d4f5-c405-4208-bfaa-920881fd9ae4" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bcrowley.py" afterPath="$PROJECT_DIR$/bcrowley.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="Daifugo.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/bcrowley.py" changelist="4568d4f5-c405-4208-bfaa-920881fd9ae4" time="1400589270162" ignored="false" />
+    <file path="/bcrowley.py" changelist="4568d4f5-c405-4208-bfaa-920881fd9ae4" time="1400739226965" ignored="false" />
     <file path="/proj3_test_code.py" changelist="4568d4f5-c405-4208-bfaa-920881fd9ae4" time="1400399696508" ignored="false" />
-    <file path="/Dummy.txt" changelist="4568d4f5-c405-4208-bfaa-920881fd9ae4" time="1400588120707" ignored="false" />
+    <file path="/Dummy.txt" changelist="4568d4f5-c405-4208-bfaa-920881fd9ae4" time="1400738136532" ignored="false" />
     <file path="/tests.py" changelist="4568d4f5-c405-4208-bfaa-920881fd9ae4" time="1400505899802" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -33,7 +33,7 @@
       <file leaf-file-name="bcrowley.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bcrowley.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="367" column="64" selection-start="10660" selection-end="10731" vertical-scroll-proportion="0.7585513">
+            <state line="407" column="74" selection-start="11470" selection-end="11470" vertical-scroll-proportion="0.44186047">
               <folding>
                 <element signature="e#226#306#0" expanded="true" />
               </folding>
@@ -53,7 +53,7 @@
       <file leaf-file-name="tests.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/tests.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="38" column="0" selection-start="5635" selection-end="5635" vertical-scroll-proportion="0.0">
+            <state line="22" column="44" selection-start="4116" selection-end="4128" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -136,7 +136,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -161,16 +160,17 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="options.lastSelected" value="preferences.keymap" />
     <property name="recentsLimit" value="5" />
+    <property name="options.lastSelected" value="preferences.keymap" />
     <property name="FullScreen" value="false" />
-    <property name="options.splitter.details.proportions" value="0.2" />
     <property name="options.searchVisible" value="true" />
+    <property name="options.splitter.details.proportions" value="0.2" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -375,7 +375,11 @@
       <created>1400588123278</created>
       <updated>1400588123278</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Straight logic succinct and complete">
+      <created>1400589427300</created>
+      <updated>1400589427300</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TodoView" selected-index="4">
@@ -402,21 +406,21 @@
     <frame x="4" y="22" width="1420" height="860" extended-state="0" />
     <editor active="false" />
     <layout>
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32972974" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32884097" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32972974" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27292576" sideWeight="0.7094595" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18850073" sideWeight="0.7094595" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2117904" sideWeight="0.6509434" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19141194" sideWeight="0.6509434" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32345015" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29054055" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.3490566" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32884097" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32884097" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -464,7 +468,7 @@
     <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" value="sort_hand(hand) reimplemented" />
+    <option name="LAST_COMMIT_MESSAGE" value="Straight logic succinct and complete" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="false" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -486,6 +490,7 @@
     <MESSAGE value="Straight search logic commenced, but incomplete. Logic appears correct, but is not added to valid_plays" />
     <MESSAGE value="Completed logic for straights, and tidied hand sorting mechanism" />
     <MESSAGE value="sort_hand(hand) reimplemented" />
+    <MESSAGE value="Straight logic succinct and complete" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -604,7 +609,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tests.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="38" column="0" selection-start="5635" selection-end="5635" vertical-scroll-proportion="0.0">
+        <state line="22" column="44" selection-start="4116" selection-end="4128" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -618,7 +623,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/bcrowley.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="367" column="64" selection-start="10660" selection-end="10731" vertical-scroll-proportion="0.7585513">
+        <state line="407" column="74" selection-start="11470" selection-end="11470" vertical-scroll-proportion="0.44186047">
           <folding>
             <element signature="e#226#306#0" expanded="true" />
           </folding>

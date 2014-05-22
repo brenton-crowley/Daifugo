@@ -62,16 +62,13 @@ def generate_plays(hand):
         list    - comprising of cards.
     """
 
-    # TODO find straights (5 or more)
-    # TODO find 4 of a kind
-    # TODO find straights (4 or more)
-    # TODO find 3 of a kind
-    # TODO find straights (3 or more)
-    # TODO find 2 of a kind
-    # TODO rest are singles
-
+    # add all the cards as single plays
     plays = [[card] for card in hand]
+
+    # add all two,three and four-of-a-kind combinations
     plays += get_all_n_of_a_kind(hand)
+
+    # add all the > 3 card straights
     plays += get_all_straights(hand)
 
     return plays
@@ -94,7 +91,10 @@ def is_valid_play(play, rnd):
                   context of the current round
     """
 
-    # TODO invalid if no plays in round and play is None
+    # invalid if no plays in round and play is None
+    if play is None and len(rnd) == 0:
+        return False
+
     # TODO invalid if round is on suit and sequence is not
 
     # TODO invalid if play does not conform to previous play (not higher)
@@ -102,6 +102,104 @@ def is_valid_play(play, rnd):
         # - TODO invalid if straight is not higher than previously played one
 
     pass
+
+
+def is_round_on_suit(rnd):
+    """
+    Returns a boolean indicating whether or not the round is on suit.
+    If the second play of the round follows the same suit as the first
+    play then the round is deemed to be 'on suit'
+
+    INPUTS:
+        rnd     - the round to date, in the form of a list of plays in
+              sequential order (each of which is, in turn, a list of cards)
+
+    RETURNS:
+        bool    - True if round is 'on_suit' otherwise False
+    """
+
+    # if the rnd has fewer than two plays then it cannot be 'on suit'
+    if len(rnd) < 2:
+        return False
+
+    first_play = rnd[0]
+    second_play = rnd[1]
+
+
+def is_play_n_of_a_kind(play, n):
+    """
+    Returns a boolean indicating whether or not the play is `n`-of-a-kind.
+
+    INPUTS:
+        play    - the play to validate.
+        n       - the delimiter
+
+    RETURNS:
+        bool    - True if play is n-of-a-kind otherwise False
+    """
+
+    # if the rnd has fewer than two plays then it cannot be 'on suit'
+    if play is None:
+        return False
+
+    if get_play_n_of_a_kind(play) != n:
+        return False
+
+    return True
+
+
+def is_play_straight(play):
+    """
+    Returns a boolean indicating whether or not the play is a straight
+
+    INPUTS:
+        play    - the play to validate.
+
+    RETURNS:
+        bool    - True if play is a straight otherwise False
+    """
+
+    suit_dict = get_suit_dict(play)
+
+    for suit in suit_dict:
+
+        ranks = suit_dict[suit]
+
+        if len(ranks) < 3:
+            return False
+
+        ranks.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+        straight = "".join(ranks)
+
+        if straight in ORDERED_RANKS:
+            print "straight: ", straight
+            return True
+
+    return False
+
+def get_play_n_of_a_kind(play):
+    """
+    Returns an int that corresponds to the `n` repeats of a rank in a play.
+
+    If the play is a None then 0.
+    If the play is a single card then 1.
+    If the play is a two-of-a-kind then 2 is returned.
+    If the play is a three-of-a-kind then 3 is returned.
+    If the play is a four-of-a-kind then 4 is returned.
+
+    INPUTS:
+        play    - the play to validate. ['5H']
+
+    RETURNS:
+        int     - int that corresponds to the n-of-a-kind (0-4)
+    """
+
+    # if the rnd has fewer than two plays then it cannot be 'on suit'
+    if play is None:
+        return 0
+
+    for rank, suits in get_rank_dict(play).items():
+        return len(suits)
 
 
 def play(rnd, hand, discard, holding,
@@ -313,19 +411,17 @@ def get_all_straights(hand):
 
         INPUTS:
 
-            ranks   - list of ranks e.g. ['3', '4', '5', 'J', 'Q', 'K']
+            ranks      - list of ranks e.g. ['3', '4', '5', 'J', 'Q', 'K']
 
         RETURNS:
-            list    - list of all valid and invalid straight combinations
+            iterator   - iterator of all valid and invalid straight combinations
 
         """
         straight_range = range(3, len(ranks) + 1)
 
-        possible_straights = chain.from_iterable(
+        return chain.from_iterable(
             combinations(
                 ranks, straight_length) for straight_length in straight_range)
-
-        return possible_straights
 
     all_straights = []
 
@@ -338,6 +434,9 @@ def get_all_straights(hand):
     for suit in suit_dict:
 
         ranks = suit_dict[suit]
+
+        if len(ranks) < 3:
+            continue
 
         # `s` is a straight_possibility
         # i.e. a tuple of ranks in the straight powerset
@@ -365,5 +464,30 @@ SORT_FIRST_ELEMENT_BY_RANK = \
 
 deal()
 
-# print find_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
-# print find_all_straights(["2H", "AH", "KH", "QH", "JH", "0H", "9H"])
+# print get_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
+# print get_all_straights(["2H", "AH", "KH", "QH", "JH", "0H", "9H"])
+
+# print is_play_n_of_a_kind(["5S"], 2)
+# print is_play_n_of_a_kind(["5S", "5C"], 2)
+# print is_play_n_of_a_kind(["5S", "5C", "5H"], 2)
+# print is_play_n_of_a_kind(["5S", "5C", "5H", "5C"], 2)
+# print is_play_n_of_a_kind(["5S"], 2)
+# print is_play_n_of_a_kind(None, 2)
+#
+# print is_play_n_of_a_kind(["5S"], 3)
+# print is_play_n_of_a_kind(["5S", "5C"], 3)
+# print is_play_n_of_a_kind(["5S", "5C", "5H"], 3)
+# print is_play_n_of_a_kind(["5S", "6S", "7S"], 3)
+# print is_play_n_of_a_kind(["5S", "5C", "5H", "5C"], 3)
+# print is_play_n_of_a_kind(["5S"], 3)
+# print is_play_n_of_a_kind(None, 3)
+#
+# print is_play_n_of_a_kind(["5S"], 4)
+# print is_play_n_of_a_kind(["5S", "5C"], 4)
+# print is_play_n_of_a_kind(["5S", "5C", "5H"], 4)
+# print is_play_n_of_a_kind(["5S", "5C", "5H", "5C"], 4)
+# print is_play_n_of_a_kind(["5S"], 4)
+# print is_play_n_of_a_kind(None, 4)
+
+print is_play_straight(['3H', '4H', '5H', 'JH', 'QH', 'KH'])  # False
+print is_play_straight(["2H", "AH", "KH", "QH", "JH", "9H", "0H"])  # True
