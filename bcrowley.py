@@ -74,12 +74,29 @@ def generate_plays(hand):
     return plays
 
 
+def get_last_live_play_from_rnd(rnd):
+    """
+
+    """
+    decrementer = -1
+    last_live_play = rnd[decrementer]
+
+    while last_live_play is None:
+        decrementer -= 1
+        last_live_play = rnd[decrementer]
+
+    return last_live_play
+
+
 def is_valid_play(play, rnd):
     """
     Should return a Boolean value, evaluating whether the given play is
     valid or not in the context of the current round. Assume that play
     constitutes a legal combination of cards, including the possibility
     of a pass (play = None).
+
+    If the comparison of the play and the last 'non-None-play) is valid then
+    one can assume that the round is valid.
 
     INPUTS:
         play    - which is a play (i.e. a list of cards)
@@ -91,19 +108,58 @@ def is_valid_play(play, rnd):
                   context of the current round
     """
 
-    # invalid if no plays in round and play is None
+    # Lead case: invalid if no plays in round and play is None
     if play is None and len(rnd) == 0:
         return False
+    elif play is not None and len(rnd) == 0:
+        return True
 
-    # TODO invalid if round is on suit and sequence is not
+    # Assume at least one play has been made, and last_live_play
+    # is the last non-pass play
+    decrementer = -1
+    last_live_play = get_last_live_play_from_rnd(rnd)
 
-    # TODO invalid if play does not conform to previous play (not higher)
-        # - TODO invalid if not same sequence e.g. single, pair
-        # - TODO invalid if straight is not higher than previously played one
+    # n-of-a-kind case
+    if get_play_n_of_a_kind(play) > 1:
+        if get_play_n_of_a_kind(play) == get_play_n_of_a_kind(last_live_play):
 
-    pass
+            played_rank = get_rank_dict(play).keys()[0]
+            last_live_rank = get_rank_dict(last_live_play).keys()[0]
+
+            if ORDERED_RANKS.index(played_rank) > \
+                    ORDERED_RANKS.index(last_live_rank):
+                return True
+
+    # assume no n-of-a-kind. Now either a straight or single card
+    if is_play_straight(play) and is_play_straight(last_live_play):
+
+        highest_played_card = play[-1]
+        highest_last_live_card = last_live_play[-1]
+
+        played_rank = highest_played_card[0]
+        last_live_rank = highest_last_live_card[0]
+
+        if ORDERED_RANKS.index(played_rank) > \
+                ORDERED_RANKS.index(last_live_rank):
+
+            if is_round_on_suit(rnd):
+
+                played_suit = highest_played_card[1]
+                last_live_suit = highest_last_live_card[1]
+
+                if played_suit != last_live_suit:
+                    return False
+
+            return True
 
 
+    else:
+        pass
+
+
+    return False
+
+# TODO perhaps find a cleaner solution
 def is_round_on_suit(rnd):
     """
     Returns a boolean indicating whether or not the round is on suit.
@@ -118,12 +174,31 @@ def is_round_on_suit(rnd):
         bool    - True if round is 'on_suit' otherwise False
     """
 
+    if rnd is None:
+        return False
+
     # if the rnd has fewer than two plays then it cannot be 'on suit'
     if len(rnd) < 2:
         return False
 
-    first_play = rnd[0]
-    second_play = rnd[1]
+    opening_play = rnd[0]
+    next_play = None
+
+    for i in range(1, len(rnd)):
+
+        play = rnd[i]
+
+        if play is not None:
+            next_play = play
+            break
+
+    if next_play is None:
+        return False
+
+    if opening_play[0][1] != next_play[0][1]:
+        return False
+
+    return True
 
 
 def is_play_n_of_a_kind(play, n):
@@ -159,29 +234,32 @@ def is_play_straight(play):
         bool    - True if play is a straight otherwise False
     """
 
+    if play is None:
+        return False
+
     suit_dict = get_suit_dict(play)
 
-    for suit in suit_dict:
+    # must be a flush i.e. all one suit
+    if len(suit_dict.keys()) != 1:
+        return False
 
-        ranks = suit_dict[suit]
+    ranks = suit_dict.values()[0]
 
-        if len(ranks) < 3:
-            return False
+    # straight must have a minimum of 3 cards
+    if len(ranks) < 3:
+        return False
 
-        ranks.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
-        straight = "".join(ranks)
+    ranks.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+    straight = "".join(ranks)
 
-        if straight in ORDERED_RANKS:
-            print "straight: ", straight
-            return True
+    return straight in ORDERED_RANKS
 
-    return False
 
 def get_play_n_of_a_kind(play):
     """
     Returns an int that corresponds to the `n` repeats of a rank in a play.
 
-    If the play is a None then 0.
+    If the play is a None oro invalid then 0.
     If the play is a single card then 1.
     If the play is a two-of-a-kind then 2 is returned.
     If the play is a three-of-a-kind then 3 is returned.
@@ -198,8 +276,13 @@ def get_play_n_of_a_kind(play):
     if play is None:
         return 0
 
-    for rank, suits in get_rank_dict(play).items():
-        return len(suits)
+    rank_dict = get_rank_dict(play)
+
+    # must have only rank to be n-of-a-kind
+    if not 0 < len(rank_dict.keys()) < 2:
+        return 0
+
+    return len(rank_dict.values()[0])
 
 
 def play(rnd, hand, discard, holding,
@@ -300,7 +383,6 @@ def sort_hand(hand):
     hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
 
 
-
 def get_rank_dict(hand):
     """
     Returns a dict containing the ranks in ORDERED_RANKS as keys. Each value
@@ -314,6 +396,9 @@ def get_rank_dict(hand):
     RETURNS:
         groups  - dict of lists
     """
+
+    if len(hand) == 1 and hand[0] is None:
+        return {}
 
     # create a dict to group values
     rank_dict = defaultdict(list)
@@ -339,6 +424,9 @@ def get_suit_dict(hand):
     RETURNS:
         groups  - dict of str lists
     """
+
+    if len(hand) == 1 and hand[0] is None:
+        return {}
 
     # create a dict to group values
     suit_dict = defaultdict(list)
@@ -429,7 +517,7 @@ def get_all_straights(hand):
     if len(hand) < 3:
         return all_straights
 
-    suit_dict = get_suit_dict(hand) #  suit as key, rank as value e.g. {'H':[0]}
+    suit_dict = get_suit_dict(hand)  # suit as key, rank as value e.g. {'H':[0]}
 
     for suit in suit_dict:
 
@@ -489,5 +577,28 @@ deal()
 # print is_play_n_of_a_kind(["5S"], 4)
 # print is_play_n_of_a_kind(None, 4)
 
-print is_play_straight(['3H', '4H', '5H', 'JH', 'QH', 'KH'])  # False
-print is_play_straight(["2H", "AH", "KH", "QH", "JH", "9H", "0H"])  # True
+# print is_play_straight(['3H', '4H', '5H', 'JH', 'QH', 'KH'])  # False
+# print is_play_straight(["2H", "AH", "KH", "QH", "JH", "9H", "0H"])  # True
+
+# print is_round_on_suit([["5S", "5C", "5H"]])  # False only one play
+# print is_round_on_suit([["5S", "5C", "5H"], ["6S", "6C", "6H"]])  # False
+# print is_round_on_suit([["5S"], ["6S"]])  # True
+# print is_round_on_suit([["5S", "6S", "7S"], ["8S", "9S", "0S"]])  # True
+# print is_round_on_suit([["5S", "6S", "7S"], [None]])  # False
+
+# print get_play_n_of_a_kind(["3S"])  # return 1
+# print get_play_n_of_a_kind(["3S", "3H"])  # return 2
+# print get_play_n_of_a_kind(["3S", "3H", "3D"])  # return 3
+# print get_play_n_of_a_kind(["3S", "3H", "3D", "3C"])  # return 4
+# print get_play_n_of_a_kind(["5S", "6S", "7S"])  # return 0
+# print get_play_n_of_a_kind([None])  # return 0
+
+print is_valid_play(["7H", "7C"],[["5S", "5C"],["6H", "6C"], None])  # True
+print is_valid_play(["2H", "2C"],[["5S", "5C"],["JH", "JC"], None])  # True
+print is_valid_play(["JD", "JS"],[["JH", "JC"], None])  # False
+
+print is_valid_play(["4D", "5D", "6D", "7D", "8D"],
+                    [["5H", "6H", "7H"], None])  # True
+
+print is_valid_play(["QC", "KC", "AC"],
+                    [["5H", "6H", "7H"], None, ["9H", "0H", "JH"]])  # False

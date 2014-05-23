@@ -21,6 +21,7 @@ tests = {
         ('submission.is_valid_play(["2C"], [["KD"]])',True),
         ('submission.is_valid_play(None, [])',False),
         ('submission.is_valid_play(["AD"], [["5S", "5C"],["6H", "6C"]])',False),
+        ('submission.is_valid_play(["6H", "6C"], [["5S", "5C"]])',True),
         ('submission.is_valid_play(["4D", "5D", "6D", "7D", "8D"],[["5H", "6H", "7H"], None])',True),
         ('submission.is_valid_play(["4D", "5D", "6D", "8D", "7D"],[["6H", "5H", "7H"], None])',True),
         ('submission.is_valid_play(["4D", "5D", "6D", "8D", "7D"],[["7H", "5H", "6H"], None])',True),
