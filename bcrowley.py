@@ -68,9 +68,9 @@ def swap_cards(hand, pid):
         throwaways = [card for card in hand if card not in keepers]
         sort_cards(throwaways)
 
-        if len(throwaways) == 0:
+        if len(throwaways) < 2:
             # noinspection PyUnusedLocal
-            throwaways = list(keepers)
+            throwaways += keepers
 
         return throwaways
 
@@ -102,6 +102,8 @@ def generate_plays(hand):
     RETURNS
         list    - comprising of cards.
     """
+
+    hand.sort()
 
     # add all the cards as single plays
     plays = [[card] for card in hand]
@@ -145,41 +147,50 @@ def is_valid_play(play, rnd):
 
     # Assume at least one play has been made, and last_live_play
     # is the most recent non-pass play
-    last_live_play = get_last_live_play_from_rnd(rnd)
+    first_play = rnd[0]
+    last_play = get_last_play(rnd)
+
+    # simple case if num cards in play does not match num cards in lead
+    if (
+        get_play_n_of_a_kind(first_play) > 1 and
+        get_play_n_of_a_kind(first_play) != get_play_n_of_a_kind(play)
+    ):
+        return False
+
+    # simple case if the lead is a straight and the play isn't
+    if is_play_straight(first_play) and not is_play_straight(play):
+        return False
+
+    # simple case if the lead is a single card but play isn't
+    if len(first_play) == 1 and len(play) != 1:
+        return False
 
     # n-of-a-kind case
-    if get_play_n_of_a_kind(last_live_play) > 1:
+    if get_play_n_of_a_kind(first_play) > 1:
 
-        if get_play_n_of_a_kind(play) > 1:
+        played_rank = get_rank_dict(play).keys()[0]
+        last_played_rank = get_rank_dict(last_play).keys()[0]
 
-            if get_play_n_of_a_kind(play) == \
-                    get_play_n_of_a_kind(last_live_play):
-
-                played_rank = get_rank_dict(play).keys()[0]
-                last_live_rank = get_rank_dict(last_live_play).keys()[0]
-
-                return is_rank_higher(played_rank, last_live_rank)
+        return is_rank_higher(played_rank, last_played_rank)
     else:
         # assume either a straight or single card
 
         sort_cards(play)
-        sort_cards(last_live_play)
+        sort_cards(last_play)
 
         # False if any random 3 cards other than a straight
         if len(play) >= 3 and not is_play_straight(play):
             return False
 
-        highest_played_card = play[-1]
-        highest_last_live_card = last_live_play[-1]
+        highest_played_card = play[-1]  # '[rank][suit]' e.g. '7H'
+        highest_last_played_card = last_play[-1]  # '[rank][suit]' e.g. '8H'
 
-        played_rank = highest_played_card[0]
-        last_live_rank = highest_last_live_card[0]
-
-        if is_rank_higher(played_rank, last_live_rank):
-
+        if is_rank_higher(highest_played_card[0], highest_last_played_card[0]):
             if is_round_on_suit(rnd):
 
-                if cmp(highest_played_card[1], highest_last_live_card[1]) != 0:
+                if cmp(highest_played_card[1],
+                       highest_last_played_card[1]) != 0:
+
                     return False
 
             return True
@@ -223,7 +234,7 @@ def play(rnd, hand, discard, holding,
     return None
 
 
-def get_last_live_play_from_rnd(rnd):
+def get_last_play(rnd):
     """
     The most recent non-pass play.
 
@@ -269,12 +280,12 @@ def is_round_on_suit(rnd):
     if len(plays) == 0:
         return False
 
-    second_play = plays[0][:1] \
+    follow = plays[0][:1] \
         if is_play_straight(plays[0]) else plays[0]
 
     opening_play = rnd[0]
 
-    if opening_play[0][1] != second_play[0][1]:
+    if opening_play[0][1] != follow[0][1]:
         return False
 
     return True
@@ -354,7 +365,7 @@ def get_play_n_of_a_kind(play):
     """
     Returns an int that corresponds to the `n` repeats of a rank in a play.
 
-    If the play is a None oro invalid then 0.
+    If the play is a None or invalid then 0.
     If the play is a single card then 1.
     If the play is a two-of-a-kind then 2 is returned.
     If the play is a three-of-a-kind then 3 is returned.
@@ -455,6 +466,21 @@ def sort_cards(hand):
     hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
 
 
+def sort_plays(plays):
+    """
+    Will mutate the order of `plays` in ascending order from the most preferred
+    to least preferred play.
+
+    INPUTS:
+        hand   - list of cards (e.g. ['3D', 'JH]', '2C') to be sorted
+
+    RETURNS
+        None
+    """
+
+    pass
+
+
 def get_rank_dict(hand):
     """
     Returns a dict containing the ranks in ORDERED_RANKS as keys. Each value
@@ -478,7 +504,6 @@ def get_rank_dict(hand):
     # will get the key (first char of card) and append it to the containing list
     for rank, group in groupby(hand, lambda card: card[0]):
         rank_dict[rank] += [card[1] for card in group]
-        # print (rank, group)
 
     return rank_dict
 
@@ -534,10 +559,10 @@ def get_all_n_of_a_kind(hand):
         cards = [rank + suit for suit in rank_dict[rank]]
 
         if len(cards) >= 2:  # two or more get all 2-of-a-kind
-            all_combinations += combinations(cards, 2)
+            all_combinations += [list(card) for card in combinations(cards, 2)]
 
         if len(cards) >= 3:  # three or more get all 3-of-a-kind
-            all_combinations += combinations(cards, 3)
+            all_combinations += [list(card) for card in combinations(cards, 3)]
 
         if len(cards) == 4:  # 4-of-a-kind
             all_combinations += [cards]
@@ -685,3 +710,8 @@ SORT_FIRST_ELEMENT_BY_RANK = \
 #
 # print is_valid_play(["4D", "5D", "8D", "7D"],
 #                     [["6H", "5H", "7H"], None])  # False
+#
+# print is_valid_play(['AH', 'AS'],
+#                     [['9S'], ['JH']])  # False
+# print is_valid_play(["6D"],
+#                     [['3S', '4S', '5S'], None])  # False
