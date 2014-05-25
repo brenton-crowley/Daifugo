@@ -8,7 +8,7 @@ Daifugo
 
 *****************************************************************************"""
 
-from itertools import cycle, product, groupby, combinations, chain, takewhile
+from itertools import cycle, product, groupby, combinations, chain, ifilter
 from random import shuffle
 from collections import defaultdict
 
@@ -74,21 +74,6 @@ def generate_plays(hand):
     return plays
 
 
-def get_last_live_play_from_rnd(rnd):
-    """
-
-    """
-    decrementer = -1
-    last_live_play = rnd[decrementer]
-
-    while last_live_play is None:
-        decrementer -= 1
-        last_live_play = rnd[decrementer]
-
-    return last_live_play
-
-
-# TODO find cleaner solution
 def is_valid_play(play, rnd):
     """
     Should return a Boolean value, evaluating whether the given play is
@@ -118,7 +103,7 @@ def is_valid_play(play, rnd):
         return True
 
     # Assume at least one play has been made, and last_live_play
-    # is the last non-pass play
+    # is the most recent non-pass play
     last_live_play = get_last_live_play_from_rnd(rnd)
 
     # n-of-a-kind case
@@ -161,12 +146,66 @@ def is_valid_play(play, rnd):
     return False
 
 
-# TODO perhaps find a cleaner solution
+def play(rnd, hand, discard, holding,
+         generate=generate_plays, valid=is_valid_play):
+    """This function is the game-playing agent, and returns the play in the
+    form of a list of cards or None.
+
+    'discard' represents the entire history of the game so far. It is a list,
+    each element of which represents a round in order of play in the game.
+    The first item is the first round, and the last item (discard[-1])
+    represents the current round (and is identical to 'rnd').
+
+    The function should return a list of cards representing the next play.
+    If there are no valid plays, or if a pass is chosen, the function
+    will return None.
+
+    INPUTS:
+        rnd     - a list of plays from the round to date
+        hand    - a list of the current cards held by your player
+        discard - a list of the history of the game so far
+        holding - a 4-tuple made up of int values representing how many cards
+                  each of the players is holding, indexed by the player ID
+        generate- which defaults to generate_plays function
+        valid   - which defaults to is_valid_play function
+
+    RETURNS
+        list    - list of cards representing the next play.
+    """
+
+    # simplest implementation
+
+    for play in generate(hand):
+        if valid(play, rnd):
+            return play
+
+    return None
+
+
+def get_last_live_play_from_rnd(rnd):
+    """
+    The most recent non-pass play.
+
+    INPUTS
+        rnd     - list of plays
+
+    OUTPUTS
+        list    - Last valid non-pass play
+    """
+
+    plays_reversed = \
+        list(ifilter(lambda play: play is not None, rnd[-1::-1]))
+
+    return plays_reversed[0] if len(plays_reversed) > 0 else plays_reversed
+
+
 def is_round_on_suit(rnd):
     """
     Returns a boolean indicating whether or not the round is on suit.
     If the second play of the round follows the same suit as the first
     play then the round is deemed to be 'on suit'
+
+    Assumes valid straights.
 
     INPUTS:
         rnd     - the round to date, in the form of a list of plays in
@@ -176,28 +215,25 @@ def is_round_on_suit(rnd):
         bool    - True if round is 'on_suit' otherwise False
     """
 
-    if rnd is None:
+    if (
+            rnd is None or
+            len(rnd) < 2 or
+            get_play_n_of_a_kind(rnd[0]) > 1
+    ):
         return False
 
-    # if the rnd has fewer than two plays then it cannot be 'on suit'
-    if len(rnd) < 2:
+    # remove the passes ([None]) and the opening play
+    plays = list(ifilter(lambda play: play is not None, rnd[1:]))
+
+    if len(plays) == 0:
         return False
+
+    second_play = plays[0][:1] \
+        if is_play_straight(plays[0]) else plays[0]
 
     opening_play = rnd[0]
-    next_play = None
 
-    for i in range(1, len(rnd)):
-
-        play = rnd[i]
-
-        if play is not None:
-            next_play = play
-            break
-
-    if next_play is None:
-        return False
-
-    if opening_play[0][1] != next_play[0][1]:
+    if opening_play[0][1] != second_play[0][1]:
         return False
 
     return True
@@ -301,41 +337,6 @@ def is_rank_higher(test_rank, base_rank):
     """
 
     return ORDERED_RANKS.index(test_rank) > ORDERED_RANKS.index(base_rank)
-
-def play(rnd, hand, discard, holding,
-         generate=generate_plays, valid=is_valid_play):
-    """This function is the game-playing agent, and returns the play in the
-    form of a list of cards or None.
-
-    'discard' represents the entire history of the game so far. It is a list,
-    each element of which represents a round in order of play in the game.
-    The first item is the first round, and the last item (discard[-1])
-    represents the current round (and is identical to 'rnd').
-
-    The function should return a list of cards representing the next play.
-    If there are no valid plays, or if a pass is chosen, the function
-    will return None.
-
-    INPUTS:
-        rnd     - a list of plays from the round to date
-        hand    - a list of the current cards held by your player
-        discard - a list of the history of the game so far
-        holding - a 4-tuple made up of int values representing how many cards
-                  each of the players is holding, indexed by the player ID
-        generate- which defaults to generate_plays function
-        valid   - which defaults to is_valid_play function
-
-    RETURNS
-        list    - list of cards representing the next play.
-    """
-
-    # simplest implementation
-
-    for play in generate(hand):
-            if valid(play, rnd):
-                return play
-
-    return None
 
 
 def deal(players=4):
@@ -603,10 +604,12 @@ SORT_FIRST_ELEMENT_BY_RANK = \
 # print is_play_straight(["2H", "AH", "KH", "QH", "JH", "9H", "0H"])  # True
 
 # print is_round_on_suit([["5S", "5C", "5H"]])  # False only one play
-# print is_round_on_suit([["5S", "5C", "5H"], ["6S", "6C", "6H"]])  # False
+# print is_round_on_suit([["5S", "5C", "5H"],
+#                         ["6S", "6C", "6H"], ["7S", "7C", "7H"]])  # False
 # print is_round_on_suit([["5S"], ["6S"]])  # True
 # print is_round_on_suit([["5S", "6S", "7S"], ["8S", "9S", "0S"]])  # True
-# print is_round_on_suit([["5S", "6S", "7S"], [None]])  # False
+# print is_round_on_suit([["5S", "6S", "7S"], None])  # False
+# print is_round_on_suit([["5S", "6S", "7S"], None, None])  # False
 
 # print get_play_n_of_a_kind(["3S"])  # return 1
 # print get_play_n_of_a_kind(["3S", "3H"])  # return 2
@@ -630,6 +633,6 @@ SORT_FIRST_ELEMENT_BY_RANK = \
 # print is_valid_play(["AD"], [["5S", "5C"],["6H", "6C"]])  # False
 # print is_valid_play(["4D", "5D", "6D", "8D", "7D"],
 #                     [["6H", "5H", "7H"], None])  # True
-
-print is_valid_play(["4D", "5D", "8D", "7D"],
-                    [["6H", "5H", "7H"], None])  # False
+#
+# print is_valid_play(["4D", "5D", "8D", "7D"],
+#                     [["6H", "5H", "7H"], None])  # False
