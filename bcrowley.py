@@ -8,7 +8,7 @@ Daifugo
 
 *****************************************************************************"""
 
-from itertools import cycle, product, groupby, combinations, chain, permutations
+from itertools import cycle, product, groupby, combinations, chain, takewhile
 from random import shuffle
 from collections import defaultdict
 
@@ -88,6 +88,7 @@ def get_last_live_play_from_rnd(rnd):
     return last_live_play
 
 
+# TODO find cleaner solution
 def is_valid_play(play, rnd):
     """
     Should return a Boolean value, evaluating whether the given play is
@@ -108,30 +109,39 @@ def is_valid_play(play, rnd):
                   context of the current round
     """
 
-    # Lead case: invalid if no plays in round and play is None
+    # None (pass) cases
     if play is None and len(rnd) == 0:
         return False
     elif play is not None and len(rnd) == 0:
         return True
+    elif play is None and len(rnd) > 0:
+        return True
 
     # Assume at least one play has been made, and last_live_play
     # is the last non-pass play
-    decrementer = -1
     last_live_play = get_last_live_play_from_rnd(rnd)
 
     # n-of-a-kind case
-    if get_play_n_of_a_kind(play) > 1:
-        if get_play_n_of_a_kind(play) == get_play_n_of_a_kind(last_live_play):
+    if get_play_n_of_a_kind(last_live_play) > 1:
 
-            played_rank = get_rank_dict(play).keys()[0]
-            last_live_rank = get_rank_dict(last_live_play).keys()[0]
+        if get_play_n_of_a_kind(play) > 1:
 
-            if ORDERED_RANKS.index(played_rank) > \
-                    ORDERED_RANKS.index(last_live_rank):
-                return True
+            if get_play_n_of_a_kind(play) == \
+                    get_play_n_of_a_kind(last_live_play):
 
-    # assume no n-of-a-kind. Now either a straight or single card
-    if is_play_straight(play) and is_play_straight(last_live_play):
+                played_rank = get_rank_dict(play).keys()[0]
+                last_live_rank = get_rank_dict(last_live_play).keys()[0]
+
+                return is_rank_higher(played_rank, last_live_rank)
+    else:
+        # assume either a straight or single card
+
+        sort_hand(play)
+        sort_hand(last_live_play)
+
+        # False if any random 3 cards other than a straight
+        if len(play) >= 3 and not is_play_straight(play):
+            return False
 
         highest_played_card = play[-1]
         highest_last_live_card = last_live_play[-1]
@@ -139,25 +149,17 @@ def is_valid_play(play, rnd):
         played_rank = highest_played_card[0]
         last_live_rank = highest_last_live_card[0]
 
-        if ORDERED_RANKS.index(played_rank) > \
-                ORDERED_RANKS.index(last_live_rank):
+        if is_rank_higher(played_rank, last_live_rank):
 
             if is_round_on_suit(rnd):
 
-                played_suit = highest_played_card[1]
-                last_live_suit = highest_last_live_card[1]
-
-                if played_suit != last_live_suit:
+                if cmp(highest_played_card[1], highest_last_live_card[1]) != 0:
                     return False
 
             return True
 
-
-    else:
-        pass
-
-
     return False
+
 
 # TODO perhaps find a cleaner solution
 def is_round_on_suit(rnd):
@@ -285,6 +287,21 @@ def get_play_n_of_a_kind(play):
     return len(rank_dict.values()[0])
 
 
+def is_rank_higher(test_rank, base_rank):
+    """
+    Compares two ranks, and returns a bool indicating whether or not the
+    `test_rank` is higher than the `base_rank`
+
+    INPUTS:
+        test_rank   - The rank to validate. A value in ORDERED_RANKS
+        base_rank   - The rank to test against. A value in ORDERED_RANKS
+
+    RETURNS:
+        bool        - True if test_rank is higher otherwise False
+    """
+
+    return ORDERED_RANKS.index(test_rank) > ORDERED_RANKS.index(base_rank)
+
 def play(rnd, hand, discard, holding,
          generate=generate_plays, valid=is_valid_play):
     """This function is the game-playing agent, and returns the play in the
@@ -311,7 +328,14 @@ def play(rnd, hand, discard, holding,
     RETURNS
         list    - list of cards representing the next play.
     """
-    pass
+
+    # simplest implementation
+
+    for play in generate(hand):
+            if valid(play, rnd):
+                return play
+
+    return None
 
 
 def deal(players=4):
@@ -550,8 +574,6 @@ ORDERED_RANKS = '34567890JQKA2'
 SORT_FIRST_ELEMENT_BY_RANK = \
     lambda string: ORDERED_RANKS.index(string[0])  # e.g. ['2H']
 
-deal()
-
 # print get_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
 # print get_all_straights(["2H", "AH", "KH", "QH", "JH", "0H", "9H"])
 
@@ -593,12 +615,21 @@ deal()
 # print get_play_n_of_a_kind(["5S", "6S", "7S"])  # return 0
 # print get_play_n_of_a_kind([None])  # return 0
 
-print is_valid_play(["7H", "7C"],[["5S", "5C"],["6H", "6C"], None])  # True
-print is_valid_play(["2H", "2C"],[["5S", "5C"],["JH", "JC"], None])  # True
-print is_valid_play(["JD", "JS"],[["JH", "JC"], None])  # False
+# print is_valid_play(["7H", "7C"],[["5S", "5C"],["6H", "6C"], None])  # True
+# print is_valid_play(["2H", "2C"],[["5S", "5C"],["JH", "JC"], None])  # True
+# print is_valid_play(["JD", "JS"],[["JH", "JC"], None])  # False
+#
+# print is_valid_play(["4D", "5D", "6D", "7D", "8D"],
+#                     [["5H", "6H", "7H"], None])  # True
+#
+# print is_valid_play(["QC", "KC", "AC"],
+#                     [["5H", "6H", "7H"], None, ["9H", "0H", "JH"]])  # False
+# print is_valid_play(["AC"], [["5H"], None, ["9H"]])  # False
+# print is_valid_play(["AH"], [["5H"], None, ["9H"]])  # True
+# print is_valid_play(["8H"], [["5H"], None, ["9H"]])  # False
+# print is_valid_play(["AD"], [["5S", "5C"],["6H", "6C"]])  # False
+# print is_valid_play(["4D", "5D", "6D", "8D", "7D"],
+#                     [["6H", "5H", "7H"], None])  # True
 
-print is_valid_play(["4D", "5D", "6D", "7D", "8D"],
-                    [["5H", "6H", "7H"], None])  # True
-
-print is_valid_play(["QC", "KC", "AC"],
-                    [["5H", "6H", "7H"], None, ["9H", "0H", "JH"]])  # False
+print is_valid_play(["4D", "5D", "8D", "7D"],
+                    [["6H", "5H", "7H"], None])  # False
