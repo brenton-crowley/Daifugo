@@ -14,13 +14,26 @@ from collections import defaultdict
 
 
 def swap_cards(hand, pid):
-    """It returns a list of cards from hand to swap with an opposing player at
+    """
+    Returns a list of cards from hand to swap with an opposing player at
     the start of the game, based on the rules for card swapping.
 
     • Player 0 must give their two highest cards to Player 3
     • Player 1 must give their one highest card to Player 2
     • Player 2 must give one card of their choice to Player 1
     • Player 3 must give two cards of their choice to Player 0
+
+    STRATEGY:
+
+    Players 2 and 3 will:
+        • hold on to any card that has a rank greater than 'K'
+        • hold on to any card that is part of an n-of-a-kind or straight unless
+          all cards in hand are part of some n-of-a-kind or straight.
+          If that is the case, then the lowest card/s will be discarded
+          regardless of combination.
+
+          This last clause could be expanded, but I'll leave it for simplicity.
+
 
     INPUTS:
         hand    - a list of cards (13 elements in total)
@@ -30,24 +43,52 @@ def swap_cards(hand, pid):
         list - comprising of cards.
     """
 
-    sort_hand(hand)
+    def throwaways():
+        """
+        Will return a list of cards that are deemed eligible for swapping.
+
+        The final list is determined for defining a list of 'keeper' and
+        'throwaway' cards.
+
+        A card is a keeper if it is a rank > 'K', part of a straight or part
+        of some n-of-a-kind.
+
+        RETURNS:
+            list - Cards available to throwaway
+        """
+
+        keepers = [card for card in hand
+                   if ORDERED_RANKS.index(card[0]) >= ORDERED_RANKS.index('K')]
+
+        for combo in chain(get_all_straights(hand), get_all_n_of_a_kind(hand)):
+            [keepers.append(card) for card in combo if card not in keepers]
+
+        sort_cards(keepers)
+
+        throwaways = [card for card in hand if card not in keepers]
+        sort_cards(throwaways)
+
+        if len(throwaways) == 0:
+            # noinspection PyUnusedLocal
+            throwaways = list(keepers)
+
+        return throwaways
+
+    sort_cards(hand)
 
     if pid == 0:
         return hand[-2:]
     elif pid == 1:
         return hand[-1:]
-    elif pid == 2:
-        # TODO will require more logic for strategy.
-        # • You do not want to discard a card if it is part of a set,
-        # or if it is part of n kind
-        return hand[:1]
+    if pid == 2:
+        return throwaways()[:1]
     elif pid == 3:
-        # TODO will require more logic for strategy.
-        # • You do not want to discard a card if it is part of a set,
-        # or if it is part of n kind
-        return hand[:2]
+        return throwaways()[:2]
     else:
         return []
+
+
+
 
 
 def generate_plays(hand):
@@ -121,8 +162,8 @@ def is_valid_play(play, rnd):
     else:
         # assume either a straight or single card
 
-        sort_hand(play)
-        sort_hand(last_live_play)
+        sort_cards(play)
+        sort_cards(last_live_play)
 
         # False if any random 3 cards other than a straight
         if len(play) >= 3 and not is_play_straight(play):
@@ -293,6 +334,22 @@ def is_play_straight(play):
     return straight in ORDERED_RANKS
 
 
+def is_rank_higher(test_rank, base_rank):
+    """
+    Compares two ranks, and returns a bool indicating whether or not the
+    `test_rank` is higher than the `base_rank`
+
+    INPUTS:
+        test_rank   - The rank to validate. A value in ORDERED_RANKS
+        base_rank   - The rank to test against. A value in ORDERED_RANKS
+
+    RETURNS:
+        bool        - True if test_rank is higher otherwise False
+    """
+
+    return ORDERED_RANKS.index(test_rank) > ORDERED_RANKS.index(base_rank)
+
+
 def get_play_n_of_a_kind(play):
     """
     Returns an int that corresponds to the `n` repeats of a rank in a play.
@@ -323,24 +380,10 @@ def get_play_n_of_a_kind(play):
     return len(rank_dict.values()[0])
 
 
-def is_rank_higher(test_rank, base_rank):
-    """
-    Compares two ranks, and returns a bool indicating whether or not the
-    `test_rank` is higher than the `base_rank`
-
-    INPUTS:
-        test_rank   - The rank to validate. A value in ORDERED_RANKS
-        base_rank   - The rank to test against. A value in ORDERED_RANKS
-
-    RETURNS:
-        bool        - True if test_rank is higher otherwise False
-    """
-
-    return ORDERED_RANKS.index(test_rank) > ORDERED_RANKS.index(base_rank)
-
-
 def deal(players=4):
     """
+    For internal testing.
+
     Will return a tuple of lists whose length will be that
     of the `players` input, which defaults to 4. Each nested list will comprise
     cards whose length is determined by the quotient of the number of players
@@ -361,14 +404,17 @@ def deal(players=4):
         player.append(card)
 
     for hand in hands:
-        sort_hand(hand)
+        sort_cards(hand)
         generate_plays(hand)
 
     return hands
 
 
 def get_deck(shouldShuffle=False):
-    """Will return a list of strings in the form of '"value" + "suit"' e.g. "3D"
+    """
+    For internal testing.
+
+    Will return a list of strings in the form of '"value" + "suit"' e.g. "3D"
     which signifies 3 of diamonds. The value 0 is equivalent to 10.
 
     INPUTS:
@@ -388,8 +434,9 @@ def get_deck(shouldShuffle=False):
     return deck
 
 
-def sort_hand(hand):
-    """Will mutate the `hand` according to the Diafugo rule of
+def sort_cards(hand):
+    """
+    Will mutate the `hand` according to the Diafugo rule of
     value ordering, which, in ascending order, is: 34567890JQKA2
 
     It uses `SORT_FIRST_ELEMENT_BY_RANK` constant function as its sort key,
@@ -514,7 +561,7 @@ def get_all_straights(hand):
 
     def get_straight_possibilities(ranks):
         """
-        Returns the potential straight powerset combinations in lists where
+        Returns the potential straight combinations in lists where
         the minimum length of a straight must be 3.
 
         Combinations is used over Permutations to reduce the overhead of
@@ -574,6 +621,8 @@ SUITS = 'SHCD'
 ORDERED_RANKS = '34567890JQKA2'
 SORT_FIRST_ELEMENT_BY_RANK = \
     lambda string: ORDERED_RANKS.index(string[0])  # e.g. ['2H']
+
+# Internal Testing
 
 # print get_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
 # print get_all_straights(["2H", "AH", "KH", "QH", "JH", "0H", "9H"])
