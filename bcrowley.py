@@ -150,7 +150,7 @@ def is_valid_play(play, rnd):
     first_play = rnd[0]
     last_play = get_last_play(rnd)
 
-    # simple case if num cards in play does not match num cards in lead
+    # simple case if num cards in play do not match num cards in lead
     if (
         get_play_n_of_a_kind(first_play) > 1 and
         get_play_n_of_a_kind(first_play) != get_play_n_of_a_kind(play)
@@ -225,9 +225,69 @@ def play(rnd, hand, discard, holding,
         list    - list of cards representing the next play.
     """
 
-    # simplest implementation
+    def is_lead_play():
+        """
+        Returns a bool that indicates whether or not the play is a lead. A play
+        is the lead when rnd has no length.
 
-    for play in generate(hand):
+        RETURNS
+            bool    - True if play is lead otherwise False
+        """
+        return len(rnd) == 0
+
+    def filter_leaders(play):
+        """
+        A key filter function for plays to extract the lead plays.
+
+        A lead play is any straight not ending in a 2 or A, or any n-of-a-kind
+        that is less than
+
+        RETURNS
+            bool    - True if play is lead otherwise False
+        """
+        play.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
+
+        predicate = \
+            (
+                is_play_straight(play) and
+                ORDERED_RANKS.index(play[-1][0]) < ORDERED_RANKS.index("A")
+            ) or \
+            (
+                get_play_n_of_a_kind(play) > 1 and
+                ORDERED_RANKS.index(play[0][0]) < ORDERED_RANKS.index("J")
+            )
+
+        return predicate
+
+    plays = generate(hand)
+
+    if is_lead_play():
+
+        leaders = list(ifilter(lambda play: filter_leaders(play), plays))
+
+        # always lead with a straight where possible
+        if len(leaders) > 0:
+
+            leaders.sort(
+                key=lambda play:
+                (
+                    len(play),
+                    len(ORDERED_RANKS) - ORDERED_RANKS.index(play[0][0])
+                ), reverse=True)
+
+            # print "Leaders: ", leaders
+            return leaders[0]
+
+    sort_plays(plays)
+
+    print "Prefs: ", plays
+
+    for play in plays:
+
+        # never play multiple 2s. They are invaluable!
+        if get_play_n_of_a_kind(play) > 1 and play[0][0] == '2':
+            continue
+
         if valid(play, rnd):
             return play
 
@@ -457,7 +517,7 @@ def sort_cards(hand):
     easier to modify this function if a change is required.
 
     INPUTS:
-        hand   - list of cards (e.g. ['3D', 'JH]', '2C') to be sorted
+        hand   - list of cards (e.g. ['3D', 'JH', '2C'] to be sorted
 
     RETURNS
         None
@@ -466,19 +526,27 @@ def sort_cards(hand):
     hand.sort(key=SORT_FIRST_ELEMENT_BY_RANK)
 
 
-def sort_plays(plays):
+def sort_plays(plays, reversed=False):
     """
     Will mutate the order of `plays` in ascending order from the most preferred
     to least preferred play.
 
     INPUTS:
-        hand   - list of cards (e.g. ['3D', 'JH]', '2C') to be sorted
+        hand   - list of cards (e.g. ['3D', 'JH]', ['2C']) to be sorted
 
     RETURNS
         None
     """
 
-    pass
+    # STAGE 1
+    # sort by length then by rank value low->high
+    plays.sort(key=lambda play: (len(play), ORDERED_RANKS.index(play[-1][0])),
+               reverse=reversed)
+
+    # Stage 2
+    # Rank cards in following order
+    # > 4 card straight, 4 kind, > 3 card straight, 3 kind, straight, 2 kind,
+    # high, low
 
 
 def get_rank_dict(hand):
@@ -648,6 +716,12 @@ SORT_FIRST_ELEMENT_BY_RANK = \
     lambda string: ORDERED_RANKS.index(string[0])  # e.g. ['2H']
 
 # Internal Testing
+
+d = deal()
+for i in range(len(d)):
+    hand = d[i]
+    plays = generate_plays(hand)
+    sort_plays(plays)
 
 # print get_all_straights(['3H', '4H', '5H', 'JH', 'QH', 'KH'])
 # print get_all_straights(["2H", "AH", "KH", "QH", "JH", "0H", "9H"])
